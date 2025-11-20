@@ -42,9 +42,9 @@ You can use following definitions in your equation:
 
 > Write down angular motion equation(s) below. 👇
 
-> C_r = +\frac{\theta L}{4\pi r} \cdot i \cdot CPR (For right motor)
+> $C_r = +\frac{\theta L}{4\pi r} \cdot i \cdot CPR$ (For right motor)
 
->C_l = -\frac{\theta L}{4\pi r} \cdot i \cdot CPR (For left motor) 
+> $C_l = -\frac{\theta L}{4\pi r} \cdot i \cdot CPR$ (For left motor) 
 
 > [!TIP]
 > You may find the calculation of arc length as illustrated below helpful.
