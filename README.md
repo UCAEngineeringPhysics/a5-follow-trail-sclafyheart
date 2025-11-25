@@ -23,6 +23,8 @@ You can use following definitions in your equation:
 
 > $$C = \frac{d}{2 \pi r} \cdot i \cdot CPR$$
 
+> $C$ = ($d$ / 2* $r$ * $pi$) * $i$ * $CPR$
+
 > [!TIP]
 > If other quantities than the listed ones are needed.
 > Please introduce them in math language.
