@@ -21,7 +21,7 @@ You can use following definitions in your equation:
 
 > Write down linear motion equation below. 👇
 
-> $$C = \left( \frac{d}{2 \pi r} \right) \cdot i \cdot CPR$$
+> $$C = \frac{d}{2 \pi r} \cdot i \cdot CPR$$
 
 > [!TIP]
 > If other quantities than the listed ones are needed.
