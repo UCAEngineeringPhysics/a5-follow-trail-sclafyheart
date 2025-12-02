@@ -1,16 +1,15 @@
 from machine import Pin
 from math import pi, radians
 import time 
-
 from encoded_motor_driver import EncodedMotorDriver
 
 # Assisted by Gemini for project development and debugging.
 
 class TrailFollowerRobot:
     
-    AXLE_LENGTH_M = 0.115          # L (Distance between wheel centers) 
-    DEFAULT_SPEED = 0.4
-    SPIN_SPEED = 0.35
+    AXLE_LENGTH_M = 0.11          # L (Distance between wheel centers) 
+    DEFAULT_SPEED = 0.5
+    SPIN_SPEED = 0.45
     STRAIGHT_P_GAIN = 0.005       # Proportional gain for straight driving correction
 
     def __init__(self, emd_l: EncodedMotorDriver, emd_r: EncodedMotorDriver):
@@ -28,7 +27,6 @@ class TrailFollowerRobot:
         Calculates the target encoder counts for straight movement.
         Formula: C = (d / (2 * pi * r)) * i * CPR
         """
-        # 2 * pi * r is correctly grouped 
         revolutions = distance_m / (2 * pi * self.R)
         return round(revolutions * self.I * self.CPR)
 
@@ -53,8 +51,6 @@ class TrailFollowerRobot:
         # Start motors at base speed immediately
         dir_l(base_speed)
         dir_r(base_speed)
-        
-        initial_time = time.ticks_ms()
         
         while abs(self.motor_l.encoder_counts) < abs_target_l or abs(self.motor_r.encoder_counts) < abs_target_r:
             
@@ -83,16 +79,20 @@ class TrailFollowerRobot:
     def drive_straight(self, distance_m, speed=DEFAULT_SPEED):
         counts = self._calculate_straight_counts(distance_m)
         target_counts = counts if distance_m >= 0 else -counts
-        self._drive_to_counts(target_counts, target_counts, speed, straight_correction=True)
+        
+        target_l = target_counts
+        target_r = -target_counts 
+        
+        self._drive_to_counts(target_l, target_r, speed, straight_correction=True)
 
     def spin_turn(self, angle_deg, direction, speed=SPIN_SPEED):
         angle_rad = radians(abs(angle_deg))
         counts = self._calculate_spin_counts(angle_rad)
         
         if direction.lower() == 'ccw' or direction.lower() == 'left':
-            target_l, target_r = -counts, counts
+            target_l, target_r = counts, counts 
         elif direction.lower() == 'cw' or direction.lower() == 'right':
-            target_l, target_r = counts, -counts
+            target_l, target_r = -counts, -counts 
         else:
             print("Invalid spin direction.")
             return
@@ -119,36 +119,12 @@ class TrailFollowerRobot:
 
     # Main Trail Sequence
     def run_trail(self):
-        print("--- Starting Trail Following Sequence ---")
+        print("Starting Trail Following")
         
         STBY_PIN_ID = 12
         STBY = Pin(STBY_PIN_ID, Pin.OUT)
         STBY.on() # Enable motor driver
         print(f"STBY Pin {STBY_PIN_ID} set HIGH.")
-
-        # DIAGNOSTIC MOTOR TEST
-        print("\n--- Diagnostic Motor Spin Test (0.5s at 0.9 speed) ---")
-        self.motor_l.reset_encoder_counts()
-        self.motor_r.reset_encoder_counts()
-        
-        # Both motors to move 
-        self.motor_l.forward(0.9) 
-        self.motor_r.backward(0.9)
-        time.sleep(0.5)
-        self.motor_l.stop()
-        self.motor_r.stop()
-
-        l_counts = abs(self.motor_l.encoder_counts)
-        r_counts = abs(self.motor_r.encoder_counts)
-        print(f"Test Result: L Counts={l_counts}, R Counts={r_counts}")
-        
-        # Diagnostic must pass for BOTH motors.
-        if l_counts < 5 or r_counts < 5: 
-            print("DIAGNOSTIC FAILED: Encoders are not registering movement on one or both motors.")
-            STBY.off()
-            return # Halt execution if test fails
-        
-        print("DIAGNOSTIC PASSED: Motors are spinning and encoders are working. Starting trail...")
         
         # 1. CP4 -> CP1 (0.75m, Stop 3s)
         self._drive_segment(0.75, "Checkpoint 1", 3)
@@ -160,7 +136,7 @@ class TrailFollowerRobot:
         self._drive_segment(0.5, "Checkpoint 2", 3)
         
         # 4. Spin 90 deg CW (Stop 1s)
-        self._turn_segment(90, 'cw', 1)
+        self._turn_segment(270, 'cw', 1)
         
         # 5. CP2 -> CP3 (0.5m, Stop 3s)
         self._drive_segment(0.5, "Checkpoint 3", 3)
@@ -171,30 +147,28 @@ class TrailFollowerRobot:
         # 7. CP3 -> CP4 (0.5m, Shutdown)
         self._drive_segment(0.5, "Checkpoint 4", 0)
         
-        # Shutdown sequence
-        print("--- Trail Following Sequence Complete. Robot Shut Down. ---")
+        # Shutdown 
+        print("Trail Following Sequence Complete. Shutting Down")
         STBY.off()
         self.motor_l.stop()
         self.motor_r.stop()
-
 
 # Main Execution Block
 
 if __name__ == "__main__":
     
-    # Motor A (Left): driver_ids=(7, 9, 8), encoder_ids=(16, 17) 
+    # Motor A (Left)
     emd_a = EncodedMotorDriver(
         driver_ids=(7, 9, 8),
         encoder_ids=(16, 17),
     )
     
-    # Motor B (Right): driver_ids=(15, 13, 14), encoder_ids=(18, 19) 
+    # Motor B (Right)
     emd_b = EncodedMotorDriver(
         driver_ids=(15, 13, 14),
         encoder_ids=(18, 19),
     )
     
-    robot = TrailFollowerRobot(emd_a, emd_b) 
-    # robot = TrailFollowerRobot(emd_b, emd_a)
+    robot = TrailFollowerRobot(emd_b, emd_a) 
     
     robot.run_trail()
